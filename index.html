@@ -79,6 +79,59 @@
     th:last-child,td:last-child { text-align:right; white-space:nowrap; }
     .badge { display:inline-block; padding:4px 8px; border-radius:999px; background:var(--soft); font-size:.78rem; font-weight:800; }
     .status { padding:12px; border-radius:12px; background:#f8fafc; color:var(--muted); }
+
+    .julia-egg {
+      margin:18px 0 0;
+      padding:18px 16px;
+      border-radius:16px;
+      background:linear-gradient(135deg,#fff7ed,#fff1f2);
+      border:1px solid #fecdd3;
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+      animation:juliaPop .45s ease-out both;
+    }
+    .julia-egg .heart {
+      font-size:2rem;
+      display:block;
+      margin-bottom:6px;
+      animation:heartBeat 1.2s ease-in-out infinite;
+    }
+    .julia-egg strong {
+      display:block;
+      font-size:1.08rem;
+      margin-bottom:5px;
+      color:#9f1239;
+    }
+    .julia-egg span {
+      color:#7c2d12;
+      line-height:1.45;
+    }
+    .julia-confetti {
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:9999;
+    }
+    .julia-confetti i {
+      position:absolute;
+      top:-30px;
+      font-style:normal;
+      animation:fallJulia 2.6s linear forwards;
+    }
+    @keyframes juliaPop {
+      from { opacity:0; transform:translateY(10px) scale(.98); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+    @keyframes heartBeat {
+      0%,100% { transform:scale(1); }
+      50% { transform:scale(1.18); }
+    }
+    @keyframes fallJulia {
+      to { transform:translateY(110vh) rotate(540deg); opacity:.15; }
+    }
+
     @media (max-width:560px) {
       .wrap { width:min(100% - 14px,760px); padding-top:10px; }
       .subject-grid { grid-template-columns:1fr; }
@@ -125,6 +178,13 @@
       <div id="finalScore" class="score-big"></div>
       <p id="resultText"></p>
       <p id="saveStatus" class="status">Ergebnis wird gespeichert …</p>
+
+      <div id="juliaEgg" class="julia-egg hidden" aria-live="polite">
+        <span class="heart">💛</span>
+        <strong>Geheime Nachricht freigeschaltet</strong>
+        <span>Julia, du bist sowieso die Beste. ❤️</span>
+      </div>
+
     </div>
     <button id="restartBtn" class="main-btn">Noch einmal spielen</button>
   </section>
@@ -225,6 +285,15 @@ async function finishQuiz() {
   $("finalScore").textContent=`${score} / ${currentQuestions.length}`;
   $("resultText").textContent=percent>=90?"Stark! Fast fehlerfrei.":percent>=70?"Sehr gutes Ergebnis!":percent>=50?"Solide – beim nächsten Versuch geht noch mehr.":"Guter Start. Versuch es noch einmal!";
   $("saveStatus").textContent="Ergebnis wird online gespeichert …";
+
+  const isJulia = playerName.trim().toLowerCase() === "julia";
+  if (isJulia) {
+    $("juliaEgg").classList.remove("hidden");
+    launchJuliaConfetti();
+  } else {
+    $("juliaEgg").classList.add("hidden");
+  }
+
   const ok=await saveOnline({name:playerName,quiz:selectedSubject,score,total:currentQuestions.length,percent});
   $("saveStatus").textContent=ok?"✓ Ergebnis wurde in der gemeinsamen Bestenliste gespeichert.":"⚠ Ergebnis konnte nicht gespeichert werden. Prüfe die Supabase-RLS-Policy.";
   await loadLeaderboard();
@@ -276,8 +345,27 @@ function subjectLabel(x) { return x==="latin"?"Latein":x==="history"?"Geschichte
 function formatDate(x) { try{return new Date(x).toLocaleDateString("de-DE");}catch{return "";} }
 function escapeHtml(x) { return String(x).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
 function resetToStart() {
+  $("juliaEgg").classList.add("hidden");
   $("resultCard").classList.add("hidden"); $("quizCard").classList.add("hidden"); $("startCard").classList.remove("hidden");
   window.scrollTo({top:0,behavior:"smooth"});
+}
+
+
+function launchJuliaConfetti() {
+  const layer = document.createElement("div");
+  layer.className = "julia-confetti";
+  const symbols = ["💛","❤️","✨","🌟","💫"];
+  for (let i = 0; i < 28; i++) {
+    const piece = document.createElement("i");
+    piece.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    piece.style.left = Math.random() * 100 + "vw";
+    piece.style.fontSize = (16 + Math.random() * 16) + "px";
+    piece.style.animationDelay = (Math.random() * .7) + "s";
+    piece.style.animationDuration = (2 + Math.random() * 1.4) + "s";
+    layer.appendChild(piece);
+  }
+  document.body.appendChild(layer);
+  setTimeout(() => layer.remove(), 4200);
 }
 
 loadLeaderboard();
