@@ -1,678 +1,286 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#172554" />
-  <title>Quiz – Latein & Geschichte</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#172554">
+  <title>Latein & Geschichte Quiz</title>
   <style>
-    :root{
-      --bg:#f6f7fb;
-      --card:#ffffff;
-      --text:#172033;
-      --muted:#667085;
-      --primary:#1d4ed8;
-      --primary-dark:#1e3a8a;
-      --success:#15803d;
-      --danger:#b42318;
-      --border:#dfe4ec;
-      --shadow:0 10px 30px rgba(16,24,40,.08);
-      --radius:18px;
+    :root {
+      --bg:#f6f8fc; --card:#fff; --text:#14213d; --muted:#667085;
+      --primary:#1d4ed8; --primary-dark:#172554; --line:#dbe2ea;
+      --good:#15803d; --bad:#b42318; --soft:#eef4ff;
+      --shadow:0 10px 35px rgba(16,24,40,.08);
     }
-
-    *{box-sizing:border-box}
-    body{
-      margin:0;
+    * { box-sizing:border-box; }
+    body {
+      margin:0; min-height:100vh;
       font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       color:var(--text);
-      background:linear-gradient(180deg,#eef4ff 0,#f8fafc 260px,var(--bg) 100%);
-      min-height:100vh;
+      background:linear-gradient(180deg,#eaf1ff 0,#f7f9fc 300px,var(--bg) 100%);
     }
-
-    .wrap{
-      width:min(100% - 24px,760px);
-      margin:0 auto;
-      padding:22px 0 48px;
+    .wrap { width:min(100% - 22px,760px); margin:auto; padding:20px 0 48px; }
+    header { text-align:center; padding:10px 8px 20px; }
+    h1 { margin:0 0 8px; font-size:clamp(1.8rem,7vw,2.6rem); line-height:1.05; }
+    header p { margin:0; color:var(--muted); }
+    .card {
+      background:var(--card); border:1px solid var(--line); border-radius:18px;
+      box-shadow:var(--shadow); padding:clamp(18px,4vw,28px); margin-bottom:18px;
     }
-
-    header{
-      text-align:center;
-      padding:10px 10px 22px;
+    .hidden { display:none!important; }
+    label { display:block; font-weight:800; margin-bottom:8px; }
+    input[type=text] {
+      width:100%; padding:14px 15px; border:1px solid var(--line);
+      border-radius:12px; font-size:16px; outline:none; margin-bottom:15px;
     }
-
-    header h1{
-      margin:0 0 8px;
-      font-size:clamp(1.7rem,6vw,2.5rem);
-      line-height:1.05;
+    input[type=text]:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(29,78,216,.12); }
+    .subject-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:6px 0 16px; }
+    button { font:inherit; cursor:pointer; }
+    .subject-btn,.answer-btn,.main-btn,.secondary-btn {
+      border-radius:12px; border:1px solid var(--line);
     }
-
-    header p{
-      margin:0;
-      color:var(--muted);
-      font-size:1rem;
+    .subject-btn { padding:13px 8px; background:#f7f9fc; font-weight:800; }
+    .subject-btn.active { background:var(--primary-dark); color:#fff; border-color:var(--primary-dark); }
+    .main-btn {
+      width:100%; padding:14px 16px; border:0; background:var(--primary);
+      color:#fff; font-weight:850; font-size:1rem;
     }
-
-    .card{
-      background:var(--card);
-      border:1px solid rgba(223,228,236,.9);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:clamp(18px,4vw,28px);
-      margin-bottom:18px;
+    .main-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .secondary-btn {
+      padding:9px 12px; background:#f4f6f8; color:var(--text); font-weight:700;
     }
-
-    .hidden{display:none!important}
-
-    label{
-      display:block;
-      font-weight:700;
-      margin-bottom:8px;
+    .topline {
+      display:flex; justify-content:space-between; gap:10px;
+      color:var(--muted); font-size:.92rem; margin-bottom:12px;
     }
-
-    input[type="text"]{
-      width:100%;
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:14px 15px;
-      font-size:16px;
-      outline:none;
-      margin-bottom:14px;
+    .progress { height:9px; background:#edf0f4; border-radius:999px; overflow:hidden; margin-bottom:20px; }
+    .progress div { height:100%; width:0; background:var(--primary); transition:.2s; }
+    #questionText { font-size:clamp(1.2rem,4vw,1.55rem); line-height:1.35; }
+    .answers { display:grid; gap:10px; }
+    .answer-btn {
+      text-align:left; padding:14px 15px; min-height:52px; background:#fff; color:var(--text);
     }
-
-    input[type="text"]:focus{
-      border-color:var(--primary);
-      box-shadow:0 0 0 3px rgba(29,78,216,.12);
+    .answer-btn.correct { background:#f0fdf4; border-color:#86efac; color:#166534; }
+    .answer-btn.wrong { background:#fff4f2; border-color:#fda29b; color:#912018; }
+    .feedback { margin-top:14px; padding:12px 14px; border-radius:12px; background:#f8fafc; color:var(--muted); }
+    .score-big { font-size:clamp(2.4rem,11vw,4.2rem); text-align:center; font-weight:900; color:var(--primary-dark); }
+    .center { text-align:center; }
+    .muted,.note { color:var(--muted); }
+    .note { font-size:.88rem; line-height:1.45; }
+    .leader-head {
+      display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;
     }
-
-    .subject-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin:6px 0 16px;
-    }
-
-    .subject-btn,.answer-btn,.main-btn,.secondary-btn{
-      border:0;
-      border-radius:12px;
-      font:inherit;
-      cursor:pointer;
-      transition:.15s ease;
-    }
-
-    .subject-btn{
-      padding:14px 10px;
-      background:#f3f6fb;
-      border:1px solid var(--border);
-      font-weight:700;
-    }
-
-    .subject-btn.active{
-      color:#fff;
-      background:var(--primary-dark);
-      border-color:var(--primary-dark);
-    }
-
-    .main-btn{
-      width:100%;
-      padding:14px 18px;
-      background:var(--primary);
-      color:#fff;
-      font-weight:800;
-      font-size:1rem;
-    }
-
-    .main-btn:hover{filter:brightness(.96)}
-    .main-btn:disabled{opacity:.5;cursor:not-allowed}
-
-    .secondary-btn{
-      width:100%;
-      padding:12px 16px;
-      background:#eef2f7;
-      color:var(--text);
-      font-weight:700;
-      margin-top:10px;
-    }
-
-    .topline{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      color:var(--muted);
-      font-size:.92rem;
-      margin-bottom:14px;
-    }
-
-    .progress{
-      height:9px;
-      background:#edf0f4;
-      border-radius:999px;
-      overflow:hidden;
-      margin-bottom:22px;
-    }
-
-    .progress > div{
-      height:100%;
-      width:0;
-      background:var(--primary);
-      transition:width .25s ease;
-    }
-
-    #questionText{
-      font-size:clamp(1.2rem,4vw,1.55rem);
-      line-height:1.35;
-      margin:0 0 18px;
-    }
-
-    .answers{
-      display:grid;
-      gap:10px;
-    }
-
-    .answer-btn{
-      text-align:left;
-      padding:14px 15px;
-      background:#fff;
-      color:var(--text);
-      border:1px solid var(--border);
-      line-height:1.35;
-      min-height:52px;
-    }
-
-    .answer-btn:hover{background:#f8fafc}
-    .answer-btn.correct{
-      border-color:#86efac;
-      background:#f0fdf4;
-      color:#166534;
-    }
-    .answer-btn.wrong{
-      border-color:#fda29b;
-      background:#fff4f2;
-      color:#912018;
-    }
-
-    .feedback{
-      margin-top:14px;
-      padding:12px 14px;
-      border-radius:12px;
-      background:#f8fafc;
-      color:var(--muted);
-      min-height:46px;
-    }
-
-    .score-big{
-      text-align:center;
-      font-size:clamp(2.3rem,10vw,4rem);
-      font-weight:900;
-      color:var(--primary-dark);
-      margin:8px 0;
-    }
-
-    .center{text-align:center}
-    .muted{color:var(--muted)}
-
-    .leaderboard{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:10px;
-    }
-
-    .leaderboard th,
-    .leaderboard td{
-      padding:11px 8px;
-      border-bottom:1px solid var(--border);
-      text-align:left;
-      font-size:.95rem;
-    }
-
-    .leaderboard th{
-      color:var(--muted);
-      font-size:.82rem;
-      text-transform:uppercase;
-      letter-spacing:.04em;
-    }
-
-    .leaderboard td:last-child,
-    .leaderboard th:last-child{
-      text-align:right;
-      white-space:nowrap;
-    }
-
-    .badge{
-      display:inline-block;
-      padding:4px 8px;
-      border-radius:999px;
-      background:#eef4ff;
-      color:var(--primary-dark);
-      font-size:.78rem;
-      font-weight:700;
-    }
-
-    .note{
-      font-size:.88rem;
-      color:var(--muted);
-      line-height:1.45;
-      margin-top:16px;
-    }
-
-    @media (max-width:520px){
-      .wrap{width:min(100% - 16px,760px);padding-top:10px}
-      .card{border-radius:15px}
-      .subject-grid{grid-template-columns:1fr}
-      .leaderboard th:nth-child(3),
-      .leaderboard td:nth-child(3){display:none}
+    .online { display:inline-flex; align-items:center; gap:6px; color:var(--good); font-size:.84rem; font-weight:800; }
+    .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:11px 8px; border-bottom:1px solid var(--line); text-align:left; font-size:.94rem; }
+    th { color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; }
+    th:last-child,td:last-child { text-align:right; white-space:nowrap; }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; background:var(--soft); font-size:.78rem; font-weight:800; }
+    .status { padding:12px; border-radius:12px; background:#f8fafc; color:var(--muted); }
+    @media (max-width:560px) {
+      .wrap { width:min(100% - 14px,760px); padding-top:10px; }
+      .subject-grid { grid-template-columns:1fr; }
+      .card { border-radius:15px; }
+      th:nth-child(3),td:nth-child(3) { display:none; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Latein & Geschichte Quiz</h1>
-      <p>Teste dein Wissen direkt auf dem Smartphone.</p>
-    </header>
+<div class="wrap">
+  <header>
+    <h1>Latein & Geschichte Quiz</h1>
+    <p>Quiz spielen und mit der gemeinsamen Bestenliste vergleichen.</p>
+  </header>
 
-    <section id="startCard" class="card">
-      <label for="playerName">Dein Name</label>
-      <input id="playerName" type="text" maxlength="30" placeholder="z. B. Julia" autocomplete="name" />
+  <section id="startCard" class="card">
+    <label for="playerName">Dein Name</label>
+    <input id="playerName" type="text" maxlength="30" placeholder="Vorname oder Spitzname" autocomplete="off">
 
-      <label>Quiz auswählen</label>
-      <div class="subject-grid">
-        <button class="subject-btn active" data-subject="mix">Latein & Geschichte</button>
-        <button class="subject-btn" data-subject="latin">Nur Latein</button>
-        <button class="subject-btn" data-subject="history">Nur Geschichte</button>
-      </div>
+    <label>Quiz auswählen</label>
+    <div class="subject-grid">
+      <button class="subject-btn active" data-subject="mix">Mix</button>
+      <button class="subject-btn" data-subject="latin">Latein</button>
+      <button class="subject-btn" data-subject="history">Geschichte</button>
+    </div>
 
-      <button id="startBtn" class="main-btn">Quiz starten</button>
+    <button id="startBtn" class="main-btn">Quiz starten</button>
+    <p class="note">Tipp: Für die öffentliche Bestenliste am besten nur Vorname oder Spitzname verwenden.</p>
+  </section>
 
-      <p class="note">
-        Die Ergebnisliste wird auf diesem Gerät im Browser gespeichert.
-        Bei GitHub Pages gibt es ohne zusätzliche Datenbank keinen gemeinsamen
-        Punktestand für verschiedene Smartphones.
-      </p>
-    </section>
+  <section id="quizCard" class="card hidden">
+    <div class="topline"><span id="playerDisplay"></span><span id="counter"></span></div>
+    <div class="progress"><div id="progressBar"></div></div>
+    <h2 id="questionText"></h2>
+    <div id="answers" class="answers"></div>
+    <div id="feedback" class="feedback hidden"></div>
+    <button id="nextBtn" class="main-btn hidden" style="margin-top:14px">Nächste Frage</button>
+  </section>
 
-    <section id="quizCard" class="card hidden">
-      <div class="topline">
-        <span id="playerDisplay"></span>
-        <span id="counter"></span>
-      </div>
-      <div class="progress"><div id="progressBar"></div></div>
+  <section id="resultCard" class="card hidden">
+    <div class="center">
+      <h2>Geschafft!</h2>
+      <p id="resultName" class="muted"></p>
+      <div id="finalScore" class="score-big"></div>
+      <p id="resultText"></p>
+      <p id="saveStatus" class="status">Ergebnis wird gespeichert …</p>
+    </div>
+    <button id="restartBtn" class="main-btn">Noch einmal spielen</button>
+  </section>
 
-      <h2 id="questionText"></h2>
-      <div id="answers" class="answers"></div>
-      <div id="feedback" class="feedback hidden"></div>
-      <button id="nextBtn" class="main-btn hidden" style="margin-top:14px">Nächste Frage</button>
-    </section>
+  <section class="card">
+    <div class="leader-head">
+      <h2 style="margin:0">Bestenliste</h2>
+      <span id="onlineState" class="online"><span class="dot"></span> Online</span>
+    </div>
+    <div id="leaderboardWrap"><p class="status">Bestenliste wird geladen …</p></div>
+    <button id="refreshBtn" class="secondary-btn" style="margin-top:14px">Aktualisieren</button>
+    <p class="note">Die Ergebnisse werden zentral gespeichert und sind für alle Besucher dieser Seite sichtbar.</p>
+  </section>
+</div>
 
-    <section id="resultCard" class="card hidden">
-      <div class="center">
-        <h2>Geschafft!</h2>
-        <p id="resultName" class="muted"></p>
-        <div id="finalScore" class="score-big"></div>
-        <p id="resultText"></p>
-      </div>
-      <button id="restartBtn" class="main-btn">Noch einmal spielen</button>
-    </section>
+<script>
+const SUPABASE_URL = 'https://snbysqfigpvzlsqeefrj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_8RCSbQwxM2gx5FyGbRdE0g_igMLfsXA';
+const TABLE = "quiz_results";
 
-    <section class="card">
-      <h2 style="margin-top:0">Bestenliste</h2>
-      <div id="leaderboardWrap"></div>
-      <button id="clearScoresBtn" class="secondary-btn">Ergebnisliste löschen</button>
-      <p class="note">Gespeichert wird nur lokal in diesem Browser.</p>
-    </section>
-  </div>
+const questions = [
+  {subject:"latin",q:"Was bedeutet „amicus“?",a:["Freund","Feind","König","Lehrer"],correct:0,info:"„Amicus“ bedeutet Freund."},
+  {subject:"latin",q:"Welche Form ist der Genitiv Singular von „dominus“?",a:["domino","domini","dominum","domine"],correct:1,info:"Bei der o-Deklination lautet der Genitiv Singular auf -i: domini."},
+  {subject:"latin",q:"Welche Übersetzung passt zu „puella legit“?",a:["Das Mädchen liest.","Der Junge liest.","Das Mädchen schreibt.","Die Mädchen lesen."],correct:0,info:"„Puella“ heißt Mädchen, „legit“ bedeutet er/sie liest."},
+  {subject:"latin",q:"Was ist ein AcI?",a:["Akkusativ + Infinitiv","Eine Adjektivsteigerung","Ein Ablativ","Ein Fragesatz"],correct:0,info:"AcI steht für Accusativus cum Infinitivo."},
+  {subject:"latin",q:"Welche Zeitform ist „amavit“?",a:["Präsens","Imperfekt","Perfekt","Futur I"],correct:2,info:"„Amavit“ ist Perfekt."},
+  {subject:"latin",q:"Was bedeutet „servus“?",a:["Sklave/Diener","Soldat","Bauer","Kaufmann"],correct:0,info:"„Servus“ bedeutet Sklave oder Diener."},
+  {subject:"history",q:"Wer gehörte im Mittelalter typischerweise zum ersten Stand?",a:["Geistliche","Bauern","Handwerker","Kaufleute"],correct:0,info:"Zum ersten Stand gehörte der Klerus."},
+  {subject:"history",q:"Welche Aufgabe hatte ein Kloster unter anderem?",a:["Gebet, Bildung und Versorgung","Nur militärische Ausbildung","Nur Handel","Nur Burgverwaltung"],correct:0,info:"Klöster waren religiöse, Bildungs- und Versorgungszentren."},
+  {subject:"history",q:"Warum wurden Burgen häufig auf Anhöhen gebaut?",a:["Bessere Verteidigung und Übersicht","Bessere Bewässerung","Wegen der Märkte","Damit Schiffe anlegen konnten"],correct:0,info:"Die erhöhte Lage erleichterte Beobachtung und Verteidigung."},
+  {subject:"history",q:"Was bezeichnet Grundherrschaft?",a:["Herrschaft über Land und abhängige Bauern","Wahl des Königs durch alle Bürger","Städtebündnis","Ritterausbildung"],correct:0,info:"Grundherrschaft verband Landbesitz mit Abgaben und Diensten."},
+  {subject:"history",q:"Welche Gruppe stellte den größten Teil der Bevölkerung?",a:["Bauern","Ritter","Mönche","Adlige"],correct:0,info:"Der Großteil der Bevölkerung lebte und arbeitete auf dem Land."},
+  {subject:"history",q:"Was war eine wichtige Funktion einer Burg?",a:["Schutz- und Herrschaftssitz","Universität","Bahnhof","Nur religiöses Zentrum"],correct:0,info:"Burgen waren befestigte Wohn-, Schutz- und Herrschaftssitze."}
+];
 
-  <script>
-    const questions = [
-      {
-        subject: "latin",
-        q: "Was bedeutet das lateinische Wort „amicus“?",
-        a: ["Freund", "Feind", "König", "Lehrer"],
-        correct: 0,
-        info: "„Amicus“ bedeutet Freund."
-      },
-      {
-        subject: "latin",
-        q: "Welche Form ist der Genitiv Singular von „dominus“?",
-        a: ["domino", "domini", "dominum", "domine"],
-        correct: 1,
-        info: "Bei der o-Deklination lautet der Genitiv Singular auf -i: domini."
-      },
-      {
-        subject: "latin",
-        q: "Welche Übersetzung passt zu „puella legit“?",
-        a: ["Das Mädchen liest.", "Der Junge liest.", "Das Mädchen schreibt.", "Die Mädchen lesen."],
-        correct: 0,
-        info: "„Puella“ heißt Mädchen, „legit“ bedeutet er/sie liest."
-      },
-      {
-        subject: "latin",
-        q: "Was ist ein AcI im Lateinischen?",
-        a: [
-          "Eine Konstruktion aus Akkusativ und Infinitiv",
-          "Eine Steigerungsform des Adjektivs",
-          "Ein Nebensatz mit Konjunktiv",
-          "Eine Form des Ablativs"
-        ],
-        correct: 0,
-        info: "AcI steht für Accusativus cum Infinitivo."
-      },
-      {
-        subject: "latin",
-        q: "Welche Zeitform ist „amavit“?",
-        a: ["Präsens", "Imperfekt", "Perfekt", "Futur I"],
-        correct: 2,
-        info: "„Amavit“ ist 3. Person Singular Perfekt von amare."
-      },
-      {
-        subject: "latin",
-        q: "Welche Bedeutung hat „servus“?",
-        a: ["Sklave/Diener", "Soldat", "Bauer", "Kaufmann"],
-        correct: 0,
-        info: "„Servus“ bedeutet Sklave oder Diener."
-      },
-      {
-        subject: "history",
-        q: "Welche Gruppe gehörte im Mittelalter typischerweise zum ersten Stand?",
-        a: ["Geistliche", "Bauern", "Handwerker", "Kaufleute"],
-        correct: 0,
-        info: "Zum ersten Stand gehörte der Klerus, also die Geistlichen."
-      },
-      {
-        subject: "history",
-        q: "Welche Aufgabe hatte ein mittelalterliches Kloster unter anderem?",
-        a: [
-          "Gebet, Bildung und Versorgung",
-          "Nur militärische Ausbildung",
-          "Ausschließlich Handel",
-          "Nur die Verwaltung von Burgen"
-        ],
-        correct: 0,
-        info: "Klöster waren religiöse Zentren und spielten auch bei Bildung und Versorgung eine wichtige Rolle."
-      },
-      {
-        subject: "history",
-        q: "Warum wurden Burgen häufig auf Anhöhen gebaut?",
-        a: [
-          "Zur besseren Verteidigung und Übersicht",
-          "Damit Felder leichter bewässert werden konnten",
-          "Weil dort immer Märkte stattfanden",
-          "Damit Schiffe anlegen konnten"
-        ],
-        correct: 0,
-        info: "Eine erhöhte Lage erleichterte Beobachtung und Verteidigung."
-      },
-      {
-        subject: "history",
-        q: "Was bezeichnet der Begriff „Grundherrschaft“ im Mittelalter?",
-        a: [
-          "Die Herrschaft eines Grundherrn über Land und abhängige Bauern",
-          "Die Wahl eines Königs durch alle Bürger",
-          "Ein Bündnis mehrerer Städte",
-          "Die Ausbildung von Rittern"
-        ],
-        correct: 0,
-        info: "Grundherrschaft verband Landbesitz mit Abgaben und Diensten abhängiger Bauern."
-      },
-      {
-        subject: "history",
-        q: "Welche Personengruppe stellte im Mittelalter den größten Teil der Bevölkerung?",
-        a: ["Bauern", "Ritter", "Mönche", "Adlige"],
-        correct: 0,
-        info: "Der überwiegende Teil der mittelalterlichen Bevölkerung lebte und arbeitete auf dem Land."
-      },
-      {
-        subject: "history",
-        q: "Was war eine wichtige Funktion einer Burg?",
-        a: [
-          "Schutz- und Herrschaftssitz",
-          "Universität für alle Einwohner",
-          "Öffentlicher Bahnhof",
-          "Ausschließlich religiöses Zentrum"
-        ],
-        correct: 0,
-        info: "Burgen dienten vor allem als befestigte Wohn-, Schutz- und Herrschaftssitze."
-      }
-    ];
+let selectedSubject="mix", currentQuestions=[], currentIndex=0, score=0, answered=false, playerName="";
 
-    let selectedSubject = "mix";
-    let currentQuestions = [];
-    let currentIndex = 0;
-    let score = 0;
-    let answered = false;
-    let playerName = "";
+const $ = id => document.getElementById(id);
+document.querySelectorAll(".subject-btn").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll(".subject-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active"); selectedSubject=btn.dataset.subject;
+}));
 
-    const startCard = document.getElementById("startCard");
-    const quizCard = document.getElementById("quizCard");
-    const resultCard = document.getElementById("resultCard");
-    const playerInput = document.getElementById("playerName");
-    const startBtn = document.getElementById("startBtn");
-    const playerDisplay = document.getElementById("playerDisplay");
-    const counter = document.getElementById("counter");
-    const progressBar = document.getElementById("progressBar");
-    const questionText = document.getElementById("questionText");
-    const answersEl = document.getElementById("answers");
-    const feedback = document.getElementById("feedback");
-    const nextBtn = document.getElementById("nextBtn");
-    const finalScore = document.getElementById("finalScore");
-    const resultName = document.getElementById("resultName");
-    const resultText = document.getElementById("resultText");
-    const restartBtn = document.getElementById("restartBtn");
-    const leaderboardWrap = document.getElementById("leaderboardWrap");
-    const clearScoresBtn = document.getElementById("clearScoresBtn");
+$("startBtn").addEventListener("click", startQuiz);
+$("nextBtn").addEventListener("click", nextQuestion);
+$("restartBtn").addEventListener("click", resetToStart);
+$("refreshBtn").addEventListener("click", loadLeaderboard);
 
-    document.querySelectorAll(".subject-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".subject-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        selectedSubject = btn.dataset.subject;
-      });
+function shuffle(arr) {
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function startQuiz() {
+  playerName=$("playerName").value.trim().replace(/\s+/g," ");
+  if(!playerName){ $("playerName").focus(); return; }
+  const pool=selectedSubject==="mix"?questions:questions.filter(q=>q.subject===selectedSubject);
+  currentQuestions=shuffle(pool).slice(0,Math.min(10,pool.length));
+  currentIndex=0; score=0;
+  $("startCard").classList.add("hidden"); $("resultCard").classList.add("hidden"); $("quizCard").classList.remove("hidden");
+  $("playerDisplay").textContent=playerName; showQuestion(); window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function showQuestion() {
+  answered=false; $("nextBtn").classList.add("hidden"); $("feedback").classList.add("hidden");
+  const item=currentQuestions[currentIndex];
+  $("counter").textContent=`Frage ${currentIndex+1} von ${currentQuestions.length}`;
+  $("progressBar").style.width=`${(currentIndex/currentQuestions.length)*100}%`;
+  $("questionText").textContent=item.q; $("answers").innerHTML="";
+  item.a.forEach((answer,i)=>{
+    const b=document.createElement("button"); b.className="answer-btn"; b.textContent=answer;
+    b.addEventListener("click",()=>chooseAnswer(i,b)); $("answers").appendChild(b);
+  });
+}
+
+function chooseAnswer(index,clicked) {
+  if(answered)return; answered=true;
+  const item=currentQuestions[currentIndex], buttons=[...document.querySelectorAll(".answer-btn")];
+  buttons.forEach((b,i)=>{b.disabled=true;if(i===item.correct)b.classList.add("correct");});
+  if(index===item.correct){score++;$("feedback").textContent="Richtig! "+item.info;}
+  else{clicked.classList.add("wrong");$("feedback").textContent="Nicht ganz. "+item.info;}
+  $("feedback").classList.remove("hidden");
+  $("progressBar").style.width=`${((currentIndex+1)/currentQuestions.length)*100}%`;
+  $("nextBtn").textContent=currentIndex===currentQuestions.length-1?"Ergebnis anzeigen":"Nächste Frage";
+  $("nextBtn").classList.remove("hidden");
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if(currentIndex>=currentQuestions.length) finishQuiz(); else showQuestion();
+}
+
+async function finishQuiz() {
+  $("quizCard").classList.add("hidden"); $("resultCard").classList.remove("hidden");
+  const percent=Math.round(score/currentQuestions.length*100);
+  $("resultName").textContent=`${playerName}, dein Ergebnis:`;
+  $("finalScore").textContent=`${score} / ${currentQuestions.length}`;
+  $("resultText").textContent=percent>=90?"Stark! Fast fehlerfrei.":percent>=70?"Sehr gutes Ergebnis!":percent>=50?"Solide – beim nächsten Versuch geht noch mehr.":"Guter Start. Versuch es noch einmal!";
+  $("saveStatus").textContent="Ergebnis wird online gespeichert …";
+  const ok=await saveOnline({name:playerName,quiz:selectedSubject,score,total:currentQuestions.length,percent});
+  $("saveStatus").textContent=ok?"✓ Ergebnis wurde in der gemeinsamen Bestenliste gespeichert.":"⚠ Ergebnis konnte nicht gespeichert werden. Prüfe die Supabase-RLS-Policy.";
+  await loadLeaderboard();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function saveOnline(row) {
+  try {
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`,{
+      method:"POST",
+      headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},
+      body:JSON.stringify(row)
     });
+    if(!r.ok){console.error(await r.text()); return false;}
+    return true;
+  } catch(e){ console.error(e); return false; }
+}
 
-    startBtn.addEventListener("click", startQuiz);
-    nextBtn.addEventListener("click", nextQuestion);
-    restartBtn.addEventListener("click", resetToStart);
+async function loadLeaderboard() {
+  $("leaderboardWrap").innerHTML='<p class="status">Bestenliste wird geladen …</p>';
+  try {
+    const url=`${SUPABASE_URL}/rest/v1/${TABLE}?select=name,quiz,score,total,percent,created_at&order=percent.desc,score.desc,created_at.asc&limit=50`;
+    const r=await fetch(url,{headers:{"apikey":SUPABASE_KEY}});
+    if(!r.ok) throw new Error(await r.text());
+    const rows=await r.json();
+    $("onlineState").style.color="var(--good)";
+    renderLeaderboard(rows);
+  } catch(e) {
+    console.error(e);
+    $("onlineState").style.color="var(--bad)";
+    $("leaderboardWrap").innerHTML='<p class="status">Bestenliste konnte nicht geladen werden. Wahrscheinlich fehlen noch SELECT-Rechte/RLS-Policy in Supabase.</p>';
+  }
+}
 
-    clearScoresBtn.addEventListener("click", () => {
-      if (confirm("Möchtest du wirklich alle lokal gespeicherten Ergebnisse löschen?")) {
-        localStorage.removeItem("latinHistoryQuizScores");
-        renderLeaderboard();
-      }
-    });
+function renderLeaderboard(rows) {
+  if(!rows.length){ $("leaderboardWrap").innerHTML='<p class="status">Noch keine Ergebnisse vorhanden.</p>'; return; }
+  const body=rows.map((r,i)=>`<tr>
+    <td>${i+1}. ${escapeHtml(r.name)}</td>
+    <td><span class="badge">${subjectLabel(r.quiz)}</span></td>
+    <td>${formatDate(r.created_at)}</td>
+    <td><strong>${r.score}/${r.total}</strong> · ${r.percent}%</td>
+  </tr>`).join("");
+  $("leaderboardWrap").innerHTML=`<div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Quiz</th><th>Datum</th><th>Punkte</th></tr></thead>
+    <tbody>${body}</tbody></table></div>`;
+}
 
-    function shuffle(array) {
-      const copy = [...array];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    }
+function subjectLabel(x) { return x==="latin"?"Latein":x==="history"?"Geschichte":"Mix"; }
+function formatDate(x) { try{return new Date(x).toLocaleDateString("de-DE");}catch{return "";} }
+function escapeHtml(x) { return String(x).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+function resetToStart() {
+  $("resultCard").classList.add("hidden"); $("quizCard").classList.add("hidden"); $("startCard").classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
 
-    function startQuiz() {
-      playerName = playerInput.value.trim();
-
-      if (!playerName) {
-        playerInput.focus();
-        playerInput.style.borderColor = "#b42318";
-        return;
-      }
-
-      playerInput.style.borderColor = "";
-
-      let pool = selectedSubject === "mix"
-        ? questions
-        : questions.filter(q => q.subject === selectedSubject);
-
-      currentQuestions = shuffle(pool).slice(0, Math.min(10, pool.length));
-      currentIndex = 0;
-      score = 0;
-
-      startCard.classList.add("hidden");
-      resultCard.classList.add("hidden");
-      quizCard.classList.remove("hidden");
-      playerDisplay.textContent = playerName;
-
-      showQuestion();
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-
-    function showQuestion() {
-      answered = false;
-      nextBtn.classList.add("hidden");
-      feedback.classList.add("hidden");
-      feedback.textContent = "";
-
-      const item = currentQuestions[currentIndex];
-      counter.textContent = `Frage ${currentIndex + 1} von ${currentQuestions.length}`;
-      progressBar.style.width = `${(currentIndex / currentQuestions.length) * 100}%`;
-      questionText.textContent = item.q;
-      answersEl.innerHTML = "";
-
-      item.a.forEach((answer, index) => {
-        const btn = document.createElement("button");
-        btn.className = "answer-btn";
-        btn.textContent = answer;
-        btn.addEventListener("click", () => chooseAnswer(index, btn));
-        answersEl.appendChild(btn);
-      });
-    }
-
-    function chooseAnswer(index, clickedBtn) {
-      if (answered) return;
-      answered = true;
-
-      const item = currentQuestions[currentIndex];
-      const buttons = [...answersEl.querySelectorAll(".answer-btn")];
-
-      buttons.forEach((btn, i) => {
-        btn.disabled = true;
-        if (i === item.correct) btn.classList.add("correct");
-      });
-
-      if (index === item.correct) {
-        score++;
-        feedback.textContent = "Richtig! " + item.info;
-      } else {
-        clickedBtn.classList.add("wrong");
-        feedback.textContent = "Nicht ganz. " + item.info;
-      }
-
-      feedback.classList.remove("hidden");
-      progressBar.style.width = `${((currentIndex + 1) / currentQuestions.length) * 100}%`;
-      nextBtn.textContent = currentIndex === currentQuestions.length - 1
-        ? "Ergebnis anzeigen"
-        : "Nächste Frage";
-      nextBtn.classList.remove("hidden");
-    }
-
-    function nextQuestion() {
-      currentIndex++;
-      if (currentIndex >= currentQuestions.length) {
-        finishQuiz();
-      } else {
-        showQuestion();
-      }
-    }
-
-    function finishQuiz() {
-      quizCard.classList.add("hidden");
-      resultCard.classList.remove("hidden");
-
-      const percent = Math.round((score / currentQuestions.length) * 100);
-      resultName.textContent = `${playerName}, dein Ergebnis:`;
-      finalScore.textContent = `${score} / ${currentQuestions.length}`;
-
-      if (percent >= 90) resultText.textContent = "Stark! Das war fast fehlerfrei.";
-      else if (percent >= 70) resultText.textContent = "Sehr gutes Ergebnis!";
-      else if (percent >= 50) resultText.textContent = "Solide – da geht beim nächsten Versuch noch mehr.";
-      else resultText.textContent = "Guter Start. Versuch es direkt noch einmal!";
-
-      saveScore({
-        name: playerName,
-        score,
-        total: currentQuestions.length,
-        percent,
-        subject: selectedSubject,
-        date: new Date().toLocaleDateString("de-DE")
-      });
-
-      renderLeaderboard();
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-
-    function saveScore(entry) {
-      const scores = getScores();
-      scores.push(entry);
-      scores.sort((a,b) => b.percent - a.percent || b.score - a.score);
-      localStorage.setItem("latinHistoryQuizScores", JSON.stringify(scores.slice(0, 30)));
-    }
-
-    function getScores() {
-      try {
-        return JSON.parse(localStorage.getItem("latinHistoryQuizScores")) || [];
-      } catch {
-        return [];
-      }
-    }
-
-    function subjectLabel(value) {
-      if (value === "latin") return "Latein";
-      if (value === "history") return "Geschichte";
-      return "Mix";
-    }
-
-    function renderLeaderboard() {
-      const scores = getScores();
-
-      if (!scores.length) {
-        leaderboardWrap.innerHTML = '<p class="muted">Noch keine Ergebnisse gespeichert.</p>';
-        return;
-      }
-
-      const rows = scores.map((s, i) => `
-        <tr>
-          <td>${i + 1}. ${escapeHtml(s.name)}</td>
-          <td><span class="badge">${subjectLabel(s.subject)}</span></td>
-          <td>${s.date || ""}</td>
-          <td><strong>${s.score}/${s.total}</strong> · ${s.percent}%</td>
-        </tr>
-      `).join("");
-
-      leaderboardWrap.innerHTML = `
-        <div style="overflow-x:auto">
-          <table class="leaderboard">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Quiz</th>
-                <th>Datum</th>
-                <th>Punkte</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    function escapeHtml(text) {
-      return String(text)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function resetToStart() {
-      resultCard.classList.add("hidden");
-      quizCard.classList.add("hidden");
-      startCard.classList.remove("hidden");
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-
-    renderLeaderboard();
-  </script>
+loadLeaderboard();
+</script>
 </body>
 </html>
