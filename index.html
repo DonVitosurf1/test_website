@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meine erste GitHub Pages Website</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f8;
+      color: #1f2328;
+    }
+
+    .card {
+      width: min(90%, 560px);
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    button {
+      margin-top: 12px;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      background: #1f883d;
+      color: white;
+    }
+
+    button:hover {
+      background: #1a7f37;
+    }
+
+    #ergebnis {
+      min-height: 24px;
+      margin-top: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>🚀 Meine erste GitHub Pages Website</h1>
+    <p>Diese Website läuft als einfacher Test über GitHub Pages.</p>
+    <p>Wenn du diese Seite siehst, funktioniert die Veröffentlichung.</p>
+
+    <button type="button" onclick="testButton()">Test klicken</button>
+    <p id="ergebnis"></p>
+  </main>
+
+  <script>
+    function testButton() {
+      document.getElementById("ergebnis").textContent =
+        "🎉 HTML, CSS und JavaScript funktionieren!";
+    }
+  </script>
+</body>
+</html>
